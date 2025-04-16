@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: time_series_data
+    description: "Time series data for wise pizza analysis"
+    columns:
+      - name: date
+        description: "The date of the record"
+      - name: product
+        description: "The product type"
+      - name: region
+        description: "The geographical region"
+      - name: source_currency
+        description: "The source currency code"
+      - name: target_currency
+        description: "The target currency code"
+      - name: volume
+        description: "The transaction volume"
+        data_tests:
+          - not_null
+      - name: active_customers
+        description: "Number of active customers"
+        data_tests:
+          - not_null

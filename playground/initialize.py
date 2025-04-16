@@ -4,11 +4,13 @@ docker run --name motley-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD
 """
 
 import sys
+import os
 import pandas as pd
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from sqlalchemy import create_engine
+from pathlib import Path
 
 # Database configuration
 DB_HOST = 'localhost'
@@ -155,6 +157,132 @@ def query_data():
         print(f"Error querying data: {e}")
         return None
 
+def create_dbt_sql_file():
+    """Create a SQL file for dbt to access the time_series_data table if it doesn't exist"""
+    try:
+        # Get the directory of the current script
+        script_dir = Path(__file__).parent.absolute()
+
+        # Define the directory and file path relative to the script location
+        dbt_models_dir = script_dir.parent / 'my_lightdash_project' / 'models' / 'wise_pizza'
+        sql_file_path = dbt_models_dir / 'time_series_data.sql'
+
+        # Ensure the directory exists
+        os.makedirs(dbt_models_dir, exist_ok=True)
+
+        # Check if the file already exists
+        if sql_file_path.exists():
+            print(f"\nSQL file already exists at: {sql_file_path}")
+            return True
+
+        # SQL content - a simple SELECT statement
+        sql_content = """-- time_series_data.sql
+-- This model selects data from the time_series_data table in the lightdash_data database
+
+{{ config(
+    materialized='table'
+) }}
+
+SELECT
+    "DATE" as date,
+    "PRODUCT" as product,
+    "REGION" as region,
+    "SOURCE_CURRENCY" as source_currency,
+    "TARGET_CURRENCY" as target_currency,
+    "VOLUME" as volume,
+    "ACTIVE_CUSTOMERS" as active_customers
+FROM {{ source('lightdash_data', 'time_series_data') }}
+"""
+
+        # Write the SQL file
+        with open(sql_file_path, 'w') as f:
+            f.write(sql_content)
+
+        print(f"\nCreated dbt SQL file at: {sql_file_path}")
+        return True
+    except Exception as e:
+        print(f"Error creating dbt SQL file: {e}")
+        return False
+
+def create_dbt_schema_file():
+    """Create schema.yml and sources.yml files for dbt if they don't exist"""
+    try:
+        # Get the directory of the current script
+        script_dir = Path(__file__).parent.absolute()
+
+        # Define the directory and file paths relative to the script location
+        dbt_models_dir = script_dir.parent / 'my_lightdash_project' / 'models' / 'wise_pizza'
+        schema_file_path = dbt_models_dir / 'schema.yml'
+        sources_file_path = dbt_models_dir / 'sources.yml'
+
+        # Ensure the directory exists
+        os.makedirs(dbt_models_dir, exist_ok=True)
+
+        # Check if sources.yml already exists
+        sources_exists = sources_file_path.exists()
+        if not sources_exists:
+            # Create sources.yml file to define the source
+            sources_content = """version: 2
+
+sources:
+  - name: lightdash_data
+    database: lightdash_data
+    schema: public
+    tables:
+      - name: time_series_data
+        description: "Time series data for wise pizza analysis"
+"""
+
+            with open(sources_file_path, 'w') as f:
+                f.write(sources_content)
+
+            print(f"\nCreated dbt sources file at: {sources_file_path}")
+        else:
+            print(f"\nSources file already exists at: {sources_file_path}")
+
+        # Check if schema.yml already exists
+        schema_exists = schema_file_path.exists()
+        if not schema_exists:
+            # Schema content
+            schema_content = """version: 2
+
+models:
+  - name: time_series_data
+    description: "Time series data for wise pizza analysis"
+    columns:
+      - name: date
+        description: "The date of the record"
+      - name: product
+        description: "The product type"
+      - name: region
+        description: "The geographical region"
+      - name: source_currency
+        description: "The source currency code"
+      - name: target_currency
+        description: "The target currency code"
+      - name: volume
+        description: "The transaction volume"
+        data_tests:
+          - not_null
+      - name: active_customers
+        description: "Number of active customers"
+        data_tests:
+          - not_null
+"""
+
+            # Write the schema file
+            with open(schema_file_path, 'w') as f:
+                f.write(schema_content)
+
+            print(f"Created dbt schema file at: {schema_file_path}")
+        else:
+            print(f"Schema file already exists at: {schema_file_path}")
+
+        return True
+    except Exception as e:
+        print(f"Error creating dbt schema file: {e}")
+        return False
+
 def main():
     # Download CSV data directly into a pandas DataFrame
     df = get_csv_data()
@@ -164,15 +292,9 @@ def main():
 
     # Check if the database already exists
     if check_database_exists():
-        print(f"Database '{DB_NAME}' already exists.")
-        response = input("Do you want to wipe it and create a new one? (y/n): ").strip().lower()
-
-        if response == 'y':
-            if not drop_database():
-                print("Failed to drop the database. Exiting.")
-                return
-        else:
-            print("Exiting without making changes.")
+        print(f"WARNING: Database '{DB_NAME}' already exists. It will be dropped and recreated.")
+        if not drop_database():
+            print("Failed to drop the database. Exiting.")
             return
 
     # Create a new database
@@ -187,6 +309,10 @@ def main():
 
     # Query the data back
     query_data()
+
+    # Create dbt files
+    create_dbt_sql_file()
+    create_dbt_schema_file()
 
     print("\nyay! Database setup completed successfully.")
 
