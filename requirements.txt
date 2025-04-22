@@ -3,3 +3,4 @@ psycopg2-binary>=2.9.0
 SQLAlchemy>=1.4.0
 dbt-core
 dbt-postgres
+lightdash

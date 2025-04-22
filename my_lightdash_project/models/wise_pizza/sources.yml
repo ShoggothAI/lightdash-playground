@@ -1,9 +1,0 @@
-version: 2
-
-sources:
-  - name: lightdash_data
-    database: lightdash_data
-    schema: public
-    tables:
-      - name: time_series_data
-        description: "Time series data for wise pizza analysis"

@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: time_series_data
+    description: "Time series data for wise pizza analysis"
+    meta:
+      metrics:
+        - name: vpc
+          description: "Volume per customer"
+          type: average
+          sql: "${TABLE}.volume / ${TABLE}.active_customers"
+    columns:
+      - name: transaction_date
+        description: "The date of the record"
+        meta:
+          dimension:
+            type: string
+      - name: product
+        description: "The product type"
+        meta:
+          dimension:
+            type: string
+      - name: region
+        description: "The geographical region"
+        meta:
+          dimension:
+            type: string
+      - name: source_currency
+        description: "The source currency code"
+        meta:
+          dimension:
+            type: string
+      - name: target_currency
+        description: "The target currency code"
+        meta:
+          dimension:
+            type: string
+      - name: volume
+        description: "The transaction volume"
+        data_tests:
+          - not_null
+        meta:
+          dimension:
+            type: number
+          metrics:
+            total_volume:
+              type: sum
+      - name: active_customers
+        description: "Number of active customers"
+        data_tests:
+          - not_null
+        meta:
+          dimension:
+            type: number
+          metrics:
+            total_active_customers:
+              type: sum
