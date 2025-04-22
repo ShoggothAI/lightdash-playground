@@ -90,7 +90,7 @@ Remove the example configs, we'll create a new one with initialize.py
 rm -rf models/example
 ```
 
-Run `initialize.py`, it'll create a table with data in the postgres instance, load the data, and create the dbt files
+Run `../playground/initialize.py`, it'll create a table with data in the postgres instance, load the data, and create the dbt files
 
 Now run 
 ```bash
@@ -141,7 +141,7 @@ Now go to the link that the last command generates, and you'll be inside the pro
 For some reason best known to itself, Lightdash won't pick up the correct connection
 details for your postgres db, so you'll have to go and fix them in the UI
 under "Project settings". Once you've done that, you should be able to access 
-the data and draw some charts. 
+the data and draw some charts.
 
 # Accessing lightdash via Python
 
@@ -150,3 +150,5 @@ but very basic (doesn't even appear to support filters), and https://github.com/
 is auto-generated from the OpenAPI docs, so sprawling but appears to be quite comprehensive.
 
 Lightdash API docs: https://docs.lightdash.com/api-reference/v1/introduction
+
+For an example of how to query lightdash via python, see `playground/getting_started.py`

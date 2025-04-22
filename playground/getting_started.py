@@ -13,14 +13,18 @@ assert load_dotenv(dotenv_path), "Couldn't load the .env file"
 # Import Lightdash
 import lightdash
 from lightdash import Client
-from lightdash.filter import DimensionFilter
+
 
 # Setup Lightdash Client
 access_token = os.getenv("LIGHTDASH_ACCESS_TOKEN")
 project_uuid = os.getenv("LIGHTDASH_PROJECT_UUID")
 instance_url = os.getenv("LIGHTDASH_INSTANCE_URL")
 
-client = Client(instance_url=instance_url, access_token=access_token, project_uuid=project_uuid)
+client = Client(
+    instance_url=instance_url,
+    access_token=access_token,
+    project_uuid=project_uuid,
+)
 
 # List all models
 print("Available models:")
@@ -54,6 +58,10 @@ print(df)
 
 values = df[dim.label].values
 print(values)
+
+# The below depends on filter support, currently a PR
+# https://github.com/lightdash/python-sdk/pull/10
+from lightdash.filter import DimensionFilter
 
 filter = DimensionFilter(ts_data.list_dimensions()[0], "equals", [values[0]])
 
